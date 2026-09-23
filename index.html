@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body, html{
+        background: #000;
+        color: #fff;
+        font-family: monospace;
+        min-height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
+      #header {
+        height: 32px;
+        background: linear-gradient(90deg, #104, #028, #042, #402);
+        color: #fff;
+        text-shadow: 0 0 3px #fff;
+        font-size: 26px;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+      #inputTextArea:focus{
+        outline: none;
+      }
+      .dataAreas{
+        background: #111;
+        margin: 5px;
+        width: calc(100vw - 100px);
+        color: #fff;
+        font-size: 1em;
+        border-radius: 5px;
+        padding: 10px;
+        padding-top: 3px;
+        padding-bottom: 3px;
+      }
+      #inputTextArea{
+        min-height: 250px;
+        border: 1px solid #fa04;
+      }
+      #output{
+        min-height: 40px;
+        border: 2px solid #0af8;
+        display: none;
+        white-space: pre;
+        padding-bottom: 10px;
+      }
+      .sectionTitle{
+        margin-top: 20px;
+        margin-left: 10px;
+        font-size: 1.5em;
+        color: #ff28;
+      }
+      .buttons{
+        font-size: 18px;
+        border: none;
+        border-radius: 3px;
+        background-color: #084;
+        color: #fff;
+        min-width: 100px;
+        margin: 10px;
+        text-shadow: 1px 1px 3px #000;
+        cursor: pointer;
+      }
+      .cancelButton{
+        background-color: #802;
+        color: #f88;
+        display: none;
+     }
+    </style>
+  </head>
+  <body>
+    <div id="header">
+      hash algo tester
+    </div>
+    <div class="sectionTitle">input</div>
+    <textarea
+      spellcheck="false"
+      id="inputTextArea"
+      class="dataAreas"
+    >
+const GenHash = str => {
+  const hashSize = 32
+  if(typeof str == 'number') str = str.toString()
+  const alphabet = 'abcdef0123456789'
+         // 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  
+  var ret = ''
+  const initSeed = 9
+  Array(hashSize).fill().map((v, i) => {
+    n = initSeed
+    n += ((i+99) ** 2.456 | 0)
+    str.split('').forEach((chr, idx) => {
+      n += (chr.charCodeAt(0) * (i+1+idx)) ** 2.1 | 0
+      n %= alphabet.length
+    })
+    n %= alphabet.length
+    ret += alphabet[n]
+  })
+  
+  return ret;
+}
+    </textarea><br>
+    <button
+      class="buttons"
+      onclick="RunTests()"
+      id="runTestsButton"
+    >run tests</button>
+    <button
+      class="buttons cancelButton"
+      onclick="CancelTests()"
+      id="cancelButton"
+    >stop tests</button>
+    <div
+      id="output"
+      class="dataAreas"
+    ></div><br>
+    <script src="./md5.js"></script>
+    <script src="./sha256.js"></script>
+    
+    <script type="module">
+      window.md5 = md5
+      window.sha256 = sha256
+      import * as Hash from "https://srmcgann.github.io/GenHash/hash.js"
+      const GenHash = data => Hash.GenHash(data)
+      
+      var input = document.querySelector('#inputTextArea')
+      var output = document.querySelector('#output')
+      var runTestsButton = document.querySelector('#runTestsButton')
+      var cancelButton = document.querySelector('#cancelButton')
+      
+      window.CancelTests = () => {
+        if(confirm('are you sure?')){
+          cancelButton.style.display = 'none'
+          runTestsButton.style.display = 'inline-block'
+          window.cancelTests = true
+          //output.innerHTML = ''
+          //output.style.display = 'none'
+        }
+      }
+      
+      window.RunTests = () => {
+        var memo = '', t = 0, buffer, collisions, md5Collisions, sha256Collisions
+        window.cancelTests = false
+        output.style.display = 'block'
+        var error, result = ''
+        if(input.value.indexOf('GenHash') == -1){
+          error = '<span style="color:#f00">GenHash function not found.</span>'
+        }else{
+          var stages = 3, stage = 0
+          runTestsButton.style.display = 'none'
+          do{
+            switch(stage){
+              case 0:
+                // GenHash text exists in source
+                result += '> GenHash function name found.\n'
+              break
+              case 1:
+                // check to see if 'GenHash' source is actually a function
+
+                var sandBox = document.createElement('iframe')
+                sandBox.id = 'sandbox'
+                sandBox.srcdoc="<html><body></body></html>"
+                document.body.appendChild(sandBox)
+                var script = sandBox.contentDocument.createElement('script')
+                script.innerHTML = `
+window.sha256 = top.sha256\n
+window.md5 = top.md5\n
+`
+
+                script.innerHTML += `${input.value}
+
+;top.CheckFunctionFunction = () => {
+  top.GenHashFunction = GenHash
+  return typeof GenHash
+};`
+                sandBox.contentDocument.body.appendChild(script)
+                if(top.CheckFunctionFunction() != 'function'){
+                  error = '<span style="color:#f00">GenHash text found in source, but it is not a function name.</span>'
+                }else{
+                  result += '> GenHash function is indeed a function.\n'
+                }
+                sandBox.remove()
+              break
+              case 2:
+                var mul = 10
+                collisions = md5Collisions = sha256Collisions = 0
+                const Loop = () => {
+                  t++
+                  output.innerHTML = memo +
+                       '\n> running interactive tests-'
+                  output.innerHTML += `\n  > checking for hash collisions...`
+                  for(var i = 0; i<mul; i++){
+                    var inp = (t-1) * mul + i
+                    var hash = top.GenHashFunction(inp)
+                    var md5Hash = top.md5(inp+'')
+                    var SHA256Hash = top.sha256(inp+'')
+                    if(typeof buffer[hash] == 'undefined'){
+                      buffer[hash] = inp
+                    }else{
+                      collisions++
+                    }
+                    if(i < Math.min(3, mul/2|0)) {
+                    
+                      output.innerHTML +=  `\n <font style="color: #ff0;">-> from input: ${inp}</font>`
+                      output.innerHTML +=
+                           `\n  > my hash: ${hash}`
+                      output.innerHTML +=
+                           `\n  >     md5: ${md5Hash}`
+                      output.innerHTML +=
+                           `\n  >  SHA256: ${SHA256Hash}\n`
+                           
+                    }else if(i==mul-1){
+                      output.innerHTML += `\n      attempts: ${(t-1)*mul+i}   ` + ('.').repeat(3+(t%32))
+                      output.innerHTML += `\n    collisions: <span style="color: ${collisions ? 'red' : 'green' }">${collisions}</span>`
+                      if(collisions){
+                        output.innerHTML += `\ncollision rate: ${Math.round(collisions/((t-1)*mul+i)*1e6)/1e4}%`
+                      }
+                    }
+                  }
+                  if(!window.cancelTests) requestAnimationFrame(Loop)
+                }
+                if(!memo){
+                  buffer = []
+                  memo = result
+                  Loop()
+                  cancelButton.style.display = 'inline-block'
+                }
+              break
+            }
+            stage++
+          }while(!error && stage < stages);
+        }
+
+        if(error){
+          output.style.borderColor = '#8208'
+          output.style.backgroundColor = '#8204'
+          output.style.color= '#fa4'
+          output.innerHTML = `running tests failed.
+          
+Error: ${error}
+`
+        }else{
+          output.style.borderColor = '#0f28'
+          output.style.backgroundColor = '#0824'
+          output.style.color= '#4fa'
+          output.innerHTML = `running tests succeeded.
+          
+Result:
+${result}
+`
+        }
+      }
+
+      var myHash = ''
+      for(var m=1;m<10;m++) {
+        myHash += "\n" + GenHash(m)
+      }
+      
+      input.placeholder = `// enter javascript algorith to test
+//       Function should be named "GenHash" and accept 1 argument, returning the hash
+// e.g.
+
+const GenHash = str => {
+  const hashSize = 32
+  if(typeof str == 'number') str = str.toString()
+  const alphabet = 'abcdef0123456789'
+         // 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  
+  var ret = ''
+  const initSeed = 9
+  Array(hashSize).fill().map((v, i) => {
+    n = initSeed
+    n += ((i+99) ** 2.456 | 0)
+    str.split('').forEach((chr, idx) => {
+      n += (chr.charCodeAt(0) * (i+1+idx)) ** 2.1 | 0
+      n %= alphabet.length
+    })
+    n %= alphabet.length
+    ret += alphabet[n]
+  })
+  
+  return ret;
+}
+
+/*  sample hashes: integers 1-9 as input
+      ${myHash}
+*/
+
+
+`
+    </script>
+  </body>
+</html>
