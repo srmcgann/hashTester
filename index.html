@@ -34,11 +34,18 @@
         padding-top: 3px;
         padding-bottom: 3px;
       }
+      #styledTextArea{
+         border: 2px solid #fa04;
+       }
+      .styledCodeContainer, #styledTextArea{
+        height: 250px;
+      }
       #inputTextArea{
-        min-height: 300px;
-        border: 1px solid #fa04;
-        color: #ca8;
+        height: 250px;
+        border: 2px solid #fa04;
+        color: #cba;
         display: none;
+        padding-top: 26px;
       }
       #output{
         min-height: 40px;
@@ -170,14 +177,15 @@ const GenHash = str => {
       
       var input = document.querySelector('#inputTextArea')
       var styledInput = document.querySelector('#styledTextArea')
+      var styledInputContainer = document.querySelectorAll('.styledCodeContainer')[0]
       var output = document.querySelector('#output')
       var runTestsButton = document.querySelector('#runTestsButton')
       var cancelButton = document.querySelector('#cancelButton')
       
       window.ShowStyledCode = () => {
-        styledInput.style.display = 'block'
         input.style.display = 'none'
-        document.querySelectorAll('.styledCodeContainer')[0].style.display = 'block'
+        styledInput.style.display = 'block'
+        styledInputContainer.style.display = 'block'
         document.querySelectorAll('pre code').forEach((el) => {
           delete el.dataset.highlighted
         });
@@ -187,28 +195,29 @@ const GenHash = str => {
       }
       
       window.UpdateStyledCodeContainer = () => {
-        var el = document.querySelectorAll('.styledCodeContainer')[0]
         document.querySelectorAll('pre code').forEach((el) => {
           delete el.dataset.highlighted
         });
-        el.style.display = 'none'
-        document.querySelector('#styledTextArea').innerHTML = input.value
+        styledInput.style.display = 'none'
+        styledInputContainer.style.display = 'none'
+        styledInput.innerHTML = input.value
       }
       
       window.ShowEditableCode = () => {
         if(window.cancelTests){
           styledInput.style.display = 'none'
+          styledInputContainer.style.display = 'none'
           input.style.display = 'block'
         }
       }
       
       window.CancelTests = () => {
-        if(confirm('are you sure?')){
+        //if(confirm('are you sure?')){
           cancelButton.style.display = 'none'
           runTestsButton.style.display = 'inline-block'
           window.cancelTests = true
           ShowStyledCode()
-        }
+        //}
       }
       
       
