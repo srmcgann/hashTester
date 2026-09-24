@@ -109,16 +109,16 @@ const GenHash = str => {
   
   var ret = ''
   const initSeed = 9
-  Array(hashSize).fill().map((v, i) => {
+  for(var i = 0; i < hashSize; i++){
     n = initSeed
-    n += ((i+99) ** 2.456 | 0)
+    n += (i+99) ** 2.456 | 0
     str.split('').forEach((chr, idx) => {
       n += (chr.charCodeAt(0) * (i+1+idx)) ** 2.1 | 0
       n %= alphabet.length
     })
     n %= alphabet.length
     ret += alphabet[n]
-  })
+  }
   
   return ret;
 }
@@ -139,16 +139,16 @@ const GenHash = str => {
   
   var ret = ''
   const initSeed = 9
-  Array(hashSize).fill().map((v, i) => {
+  for(var i = 0; i < hashSize; i++){
     n = initSeed
-    n += ((i+99) ** 2.456 | 0)
+    n += (i+99) ** 2.456 | 0
     str.split('').forEach((chr, idx) => {
       n += (chr.charCodeAt(0) * (i+1+idx)) ** 2.1 | 0
       n %= alphabet.length
     })
     n %= alphabet.length
     ret += alphabet[n]
-  })
+  }
   
   return ret;
 }
@@ -354,16 +354,16 @@ const GenHash = str => {
   
   var ret = ''
   const initSeed = 9
-  Array(hashSize).fill().map((v, i) => {
+  for(var i = 0; i < hashSize; i++){
     n = initSeed
-    n += ((i+99) ** 2.456 | 0)
+    n += (i+99) ** 2.456 | 0
     str.split('').forEach((chr, idx) => {
       n += (chr.charCodeAt(0) * (i+1+idx)) ** 2.1 | 0
       n %= alphabet.length
     })
     n %= alphabet.length
     ret += alphabet[n]
-  })
+  }
   
   return ret;
 }
