@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title>hash algorithm testing tool</title>
     <style>
       body, html{
         background: #000;
@@ -34,8 +35,10 @@
         padding-bottom: 3px;
       }
       #inputTextArea{
-        min-height: 250px;
+        min-height: 300px;
         border: 1px solid #fa04;
+        color: #ca8;
+        display: none;
       }
       #output{
         min-height: 40px;
@@ -54,7 +57,7 @@
         font-size: 18px;
         border: none;
         border-radius: 3px;
-        background-color: #084;
+        background-color: #266;
         color: #fff;
         min-width: 100px;
         margin: 10px;
@@ -67,17 +70,59 @@
         display: none;
      }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <link rel="stylesheet" href="srcery.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- and it's easy to individually load additional languages -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
   </head>
   <body>
     <div id="header">
       hash algo tester
     </div>
-    <div class="sectionTitle">input</div>
+    <div
+      class="sectionTitle"
+    >input</div>
+    <pre
+      class="styledCodeContainer"
+      onclick="window.ShowEditableCode()"
+    ><code
+      spellcheck="false"
+      id="styledTextArea"
+      class="dataAreas"
+    >
+// experiment with hashSize to see its effects on collisions
+
+const GenHash = str => {
+  const hashSize = 32
+  if(typeof str == 'number') str = str.toString()
+  const alphabet = 'abcdef0123456789'
+         // 'abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  
+  var ret = ''
+  const initSeed = 9
+  Array(hashSize).fill().map((v, i) => {
+    n = initSeed
+    n += ((i+99) ** 2.456 | 0)
+    str.split('').forEach((chr, idx) => {
+      n += (chr.charCodeAt(0) * (i+1+idx)) ** 2.1 | 0
+      n %= alphabet.length
+    })
+    n %= alphabet.length
+    ret += alphabet[n]
+  })
+  
+  return ret;
+}
+    </code></pre><br>
     <textarea
       spellcheck="false"
       id="inputTextArea"
       class="dataAreas"
+      oninput="UpdateStyledCodeContainer()"
     >
+// experiment with hashSize to see its effects on collisions
+
 const GenHash = str => {
   const hashSize = 32
   if(typeof str == 'number') str = str.toString()
@@ -116,27 +161,57 @@ const GenHash = str => {
     ></div><br>
     <script src="./md5.js"></script>
     <script src="./sha256.js"></script>
-    
     <script type="module">
       window.md5 = md5
       window.sha256 = sha256
+      window.cancelTests = true
       import * as Hash from "https://srmcgann.github.io/GenHash/hash.js"
       const GenHash = data => Hash.GenHash(data)
       
       var input = document.querySelector('#inputTextArea')
+      var styledInput = document.querySelector('#styledTextArea')
       var output = document.querySelector('#output')
       var runTestsButton = document.querySelector('#runTestsButton')
       var cancelButton = document.querySelector('#cancelButton')
+      
+      window.ShowStyledCode = () => {
+        styledInput.style.display = 'block'
+        input.style.display = 'none'
+        document.querySelectorAll('.styledCodeContainer')[0].style.display = 'block'
+        document.querySelectorAll('pre code').forEach((el) => {
+          delete el.dataset.highlighted
+        });
+        document.querySelectorAll('pre code').forEach((el) => {
+          hljs.highlightElement(el);
+        });
+      }
+      
+      window.UpdateStyledCodeContainer = () => {
+        var el = document.querySelectorAll('.styledCodeContainer')[0]
+        document.querySelectorAll('pre code').forEach((el) => {
+          delete el.dataset.highlighted
+        });
+        el.style.display = 'none'
+        document.querySelector('#styledTextArea').innerHTML = input.value
+      }
+      
+      window.ShowEditableCode = () => {
+        if(window.cancelTests){
+          styledInput.style.display = 'none'
+          input.style.display = 'block'
+        }
+      }
       
       window.CancelTests = () => {
         if(confirm('are you sure?')){
           cancelButton.style.display = 'none'
           runTestsButton.style.display = 'inline-block'
           window.cancelTests = true
-          //output.innerHTML = ''
-          //output.style.display = 'none'
+          ShowStyledCode()
         }
       }
+      
+      
       
       window.RunTests = () => {
         var memo = '', t = 0, buffer, collisions, md5Collisions, sha256Collisions
@@ -184,6 +259,7 @@ window.md5 = top.md5\n
               case 2:
                 var mul = 10
                 collisions = md5Collisions = sha256Collisions = 0
+                ShowStyledCode()
                 const Loop = () => {
                   t++
                   output.innerHTML = memo +
@@ -282,12 +358,19 @@ const GenHash = str => {
   return ret;
 }
 
+
 /*  sample hashes: integers 1-9 as input
       ${myHash}
 */
 
 
 `
+
+document.addEventListener('DOMContentLoaded', (event) => {
+  document.querySelectorAll('pre code').forEach((el) => {
+    hljs.highlightElement(el);
+  });
+});
     </script>
   </body>
 </html>
